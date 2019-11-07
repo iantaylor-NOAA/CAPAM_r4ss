@@ -39,7 +39,27 @@ if(FALSE){
   dates <- c(dates[1]-1, dates)
   total <- c(0, total)
 
+  # commits by month
+  commit.date <- as.numeric(format(dates, format = "%Y")) +
+    as.numeric(format(dates, format = "%m"))/12
+  commit.date <- round(commit.date, 3)
+  date.table <- expand.grid(1:12, 2008:2019)
+  all.dates.date <- paste(date.table$Var2,
+                                  substring(100 + date.table$Var1, 2),
+                          "01", sep = "-")
+  all.dates.date <- as.Date(all.dates.date)
+  all.dates.num <- round(seq(2008, 2019+11/12, 1/12), 3)
+  commit.counts <- rep(NA, length(all.dates.num))
+  for(i in 1:length(all.dates.num)){
+    commit.counts[i] <- sum(commit.date == all.dates.num[i])
+  }
 
+  # get 
+  CRAN <- read.table(file.path(mydir, 'CRAN_archive_info.txt'))
+  dates.CRAN <- as.Date(CRAN$V2)
+}
+
+if(FALSE){
   # read files in local directory to double-check word count
   allfiles <- dir('c:/github/r4ss', recursive = TRUE, full.names = TRUE)
   allfiles <- allfiles[-grep('revdep', allfiles)]
@@ -58,34 +78,41 @@ if(FALSE){
   sum(allfiles.info$lines)
   aggregate(allfiles.info$lines, by = list(allfiles.info$type), FUN = sum)
 
+    ## lines.total
+  ## # [1] 389523
+  ## Rlines.total
+  ## # [1] 36410
 
-  lines.total
-  # [1] 389523
-  Rlines.total
-  # [1] 36410
-
-  # get 
-  CRAN <- read.table(file.path(mydir, 'CRAN_archive_info.txt'))
-  dates.CRAN <- as.Date(CRAN$V2)
 }
 
 
 # make plot
-png(file.path(mydir, 'git_history.png'),
+png(file.path(mydir, 'git_history_v2.png'),
     width = 10, height = 6, res = 300, units = 'in')
 par(mar = c(4,1,1,7))
 plot(dates, total, type='n', las = 1, axes = FALSE,
      xlim = as.Date(c('2005-01-01','2020-01-01')),
      ylim = c(0, 450000),
      xlab = '', ylab = '', lwd=2, xaxs = 'i', yaxs = 'i')
+
+scale <- 2000
+points(all.dates.date,
+       scale*commit.counts,
+       type = 'h', lend = 3,
+       lwd = 4, col = 'grey80')
+
 x.ticks <- as.Date(paste0(2005:2020, "-01-01"))
 x.labs <- as.Date(paste0(2005:2020, "-07-01"))
 labs <- 2005:2020
 axis(1, at = x.ticks, labels = rep("", length(x.ticks)))
 axis(1, at = x.labs, labels = labs, tick = FALSE)
 yvec <- seq(0, 500000, by = 100000)
+yvec2 <- c(10,20,30)
+axis(4, at = scale*yvec2, labels = yvec2, las = 1,
+     col = 'grey60', col.axis = 'grey60', col.ticks = 'grey60')
 axis(4, las = 1, at = yvec, labels = rep("", 6))
 axis(4, las = 1, at = yvec, format(yvec, scientific=FALSE, big.mark = ","))
+mtext("Commits\nper month", side = 4, adj = 0.03, line = 3, col = 'grey60')
 mtext("Total lines (insertions - deletions)", side = 4, line = 5)
 for(i in 1:nrow(CRAN)){
   points(dates.CRAN[i], total[abs(dates - dates.CRAN[i]) ==
